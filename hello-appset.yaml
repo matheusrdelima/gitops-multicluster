@@ -75,7 +75,7 @@ spec:
       source:
         repoURL:        https://github.com/matheusrdelima/gitops-multicluster.git
         targetRevision: main
-        path:           charts/hello-service
+        path:           .
 
         helm:
           releaseName: "hello-{{version}}"
