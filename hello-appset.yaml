@@ -18,7 +18,7 @@ spec:
           # SHARD-1: v1 (TRÁFEGO REAL)
           # ────────────────────────────────────────────────────────────────────
           - cluster:  shard-1
-            server:   https://127.0.0.1:6444
+            server:   https://192.168.68.110:6444
             image:    hello-service:v1.0.0
             version:  v1
             shadow:   "false"
@@ -28,7 +28,7 @@ spec:
           # SHARD-1: v2 (SHADOW — ESPELHADO)
           # ────────────────────────────────────────────────────────────────────
           - cluster:  shard-1
-            server:   https://127.0.0.1:6444
+            server:   https://192.168.68.110:6444
             image:    hello-service:v2.0.0
             version:  v2
             shadow:   "true"
@@ -38,7 +38,7 @@ spec:
           # SHARD-2: v1 (TRÁFEGO REAL)
           # ────────────────────────────────────────────────────────────────────
           - cluster:  shard-2
-            server:   https://127.0.0.1:6445
+            server:   https://192.168.68.110:6445
             image:    hello-service:v1.0.0
             version:  v1
             shadow:   "false"
@@ -48,7 +48,7 @@ spec:
           # SHARD-2: v2 (SHADOW — ESPELHADO)
           # ────────────────────────────────────────────────────────────────────
           - cluster:  shard-2
-            server:   https://127.0.0.1:6445
+            server:   https://192.168.68.110:6445
             image:    hello-service:v2.0.0
             version:  v2
             shadow:   "true"
