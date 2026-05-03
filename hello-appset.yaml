@@ -73,7 +73,7 @@ spec:
       project: default
 
       source:
-        repoURL:        https://github.com/seu-usuario/gitops-multicluster.git
+        repoURL:        https://github.com/matheusrdelima/gitops-multicluster.git
         targetRevision: main
         path:           charts/hello-service
 
