@@ -1,0 +1,39 @@
+# =============================================================================
+# values.yaml — DEFAULTS apenas (sempre sobrescritos pelo ApplicationSet)
+# =============================================================================
+
+cluster:  "local"
+version:  "v0"
+image:    "hello-service:latest"
+namespace: hello-app
+
+# CHAVE: Controla tráfego real vs espelhado
+shadow: false
+weight: 100
+
+replicas: 2
+
+resources:
+  requests:
+    cpu:    "100m"
+    memory: "256Mi"
+  limits:
+    cpu:    "500m"
+    memory: "512Mi"
+
+probes:
+  liveness:
+    path:                /actuator/health/liveness
+    initialDelaySeconds: 30
+    periodSeconds:       10
+  readiness:
+    path:                /actuator/health/readiness
+    initialDelaySeconds: 15
+    periodSeconds:       5
+
+istio:
+  mirrorPercent: 100
+  timeout:       "10s"
+  retries:
+    attempts:      3
+    perTryTimeout: "3s"

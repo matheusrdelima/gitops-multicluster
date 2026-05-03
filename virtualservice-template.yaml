@@ -1,0 +1,61 @@
+{{- if not .Values.shadow }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: hello-vs
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hello.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: "ServerSideApply=true"
+spec:
+  hosts:
+    - hello-svc
+    - hello.local
+  gateways:
+    - hello-gateway
+    - mesh
+  http:
+    - name: primary
+      match:
+        - uri:
+            prefix: /hello
+      route:
+        - destination:
+            host:   hello-svc
+            subset: real
+            port:
+              number: 80
+          weight: {{ .Values.weight }}
+        {{- if lt (int .Values.weight) 100 }}
+        - destination:
+            host:   hello-svc
+            subset: shadow
+            port:
+              number: 80
+          weight: {{ sub 100 (int .Values.weight) }}
+        {{- end }}
+
+      mirror:
+        host:   hello-svc
+        subset: shadow
+        port:
+          number: 80
+      mirrorPercentage:
+        value: {{ .Values.istio.mirrorPercent }}
+      timeout: {{ .Values.istio.timeout }}
+      retries:
+        attempts:      {{ .Values.istio.retries.attempts }}
+        perTryTimeout: {{ .Values.istio.retries.perTryTimeout }}
+
+    - name: health
+      match:
+        - uri:
+            prefix: /actuator
+      route:
+        - destination:
+            host:   hello-svc
+            subset: real
+            port:
+              number: 80
+{{- end }}

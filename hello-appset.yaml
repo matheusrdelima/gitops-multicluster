@@ -1,0 +1,119 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: hello-appset
+  namespace: argocd
+  annotations:
+    description: "ApplicationSet para hello-service — única fonte de verdade"
+
+spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: false
+
+  generators:
+    - list:
+        elements:
+
+          # ────────────────────────────────────────────────────────────────────
+          # SHARD-1: v1 (TRÁFEGO REAL)
+          # ────────────────────────────────────────────────────────────────────
+          - cluster:  shard-1
+            server:   https://127.0.0.1:6444
+            image:    hello-service:v1.0.0
+            version:  v1
+            shadow:   "false"
+            weight:   "100"
+
+          # ────────────────────────────────────────────────────────────────────
+          # SHARD-1: v2 (SHADOW — ESPELHADO)
+          # ────────────────────────────────────────────────────────────────────
+          - cluster:  shard-1
+            server:   https://127.0.0.1:6444
+            image:    hello-service:v2.0.0
+            version:  v2
+            shadow:   "true"
+            weight:   "0"
+
+          # ────────────────────────────────────────────────────────────────────
+          # SHARD-2: v1 (TRÁFEGO REAL)
+          # ────────────────────────────────────────────────────────────────────
+          - cluster:  shard-2
+            server:   https://127.0.0.1:6445
+            image:    hello-service:v1.0.0
+            version:  v1
+            shadow:   "false"
+            weight:   "100"
+
+          # ────────────────────────────────────────────────────────────────────
+          # SHARD-2: v2 (SHADOW — ESPELHADO)
+          # ────────────────────────────────────────────────────────────────────
+          - cluster:  shard-2
+            server:   https://127.0.0.1:6445
+            image:    hello-service:v2.0.0
+            version:  v2
+            shadow:   "true"
+            weight:   "0"
+
+  template:
+    metadata:
+      name: "hello-{{cluster}}-{{version}}"
+      namespace: argocd
+      labels:
+        app:     hello-service
+        cluster: "{{cluster}}"
+        version: "{{version}}"
+        shadow:  "{{shadow}}"
+      annotations:
+        image:        "{{image}}"
+        traffic-role: "{{shadow}}"
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+
+    spec:
+      project: default
+
+      source:
+        repoURL:        https://github.com/seu-usuario/gitops-multicluster.git
+        targetRevision: main
+        path:           charts/hello-service
+
+        helm:
+          releaseName: "hello-{{version}}"
+          values: |
+            cluster:  "{{cluster}}"
+            version:  "{{version}}"
+            image:    "{{image}}"
+            shadow:   {{shadow}}
+            weight:   {{weight}}
+            replicas: 2
+            namespace: hello-app
+
+      destination:
+        server:    "{{server}}"
+        namespace: hello-app
+
+      syncPolicy:
+        automated:
+          prune:    true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration:    5s
+            factor:      2
+            maxDuration: 3m
+
+      ignoreDifferences:
+        - group: networking.istio.io
+          kind:  VirtualService
+          jsonPointers:
+            - /spec/http/0/route/0/weight
+            - /spec/http/0/route/1/weight
+            - /spec/http/0/mirrorPercentage
+        - group: argoproj.io
+          kind:  Rollout
+          jsonPointers:
+            - /spec/replicas

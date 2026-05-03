@@ -1,0 +1,12 @@
+apiVersion: v2
+name: hello-service
+description: |
+  Chart parametrizável para deploy multi-versão com suporte a shadow testing.
+  Comportamentos 100% dirigidos por values do ApplicationSet.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - hello-service
+  - shadow-testing
+  - gitops

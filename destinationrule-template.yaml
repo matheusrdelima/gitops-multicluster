@@ -1,0 +1,30 @@
+{{- if not .Values.shadow }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: hello-dr
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hello.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: "ServerSideApply=true"
+spec:
+  host: hello-svc
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http2MaxRequests: 1000
+    outlierDetection:
+      consecutiveGatewayErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+  subsets:
+    - name: real
+      labels:
+        traffic.role: real
+    - name: shadow
+      labels:
+        traffic.role: shadow
+{{- end }}
